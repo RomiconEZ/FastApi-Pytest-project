@@ -1,12 +1,13 @@
-from fastapi import APIRouter, status
+from fastapi import status
+from fastapi import APIRouter
 
 from src.schemas import IncomingSeller, ReturnedAllSellers, ReturnedSeller
 from src.schemas.sellers import ReturnedSellerWithBooks, UpdatedSeller
 from src.service.sellers import SellersService
 from src.utils.db_session import DBSession
 
-sellers_router = APIRouter(tags=["sellers"], prefix="/seller")
 
+sellers_router = APIRouter(tags=["sellers"], prefix="/seller")
 
 
 @sellers_router.post("/", response_model=ReturnedSeller, status_code=status.HTTP_201_CREATED)

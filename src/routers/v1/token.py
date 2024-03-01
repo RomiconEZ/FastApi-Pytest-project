@@ -1,20 +1,23 @@
 from datetime import timedelta
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from src.schemas.token import Token
 from src.service.users import UsersService
 from src.utils.auth import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
-from fastapi import Depends
 from src.utils.db_session import DBSession
+
+from fastapi import APIRouter, Depends
+
 
 auth_router = APIRouter(tags=["auth"])
 
 
-
 @auth_router.post("/token", response_model=Token, status_code=status.HTTP_200_OK)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), session: DBSession = Depends()):
+async def login_for_access_token(session: DBSession,
+                                 form_data: OAuth2PasswordRequestForm = Depends(),
+                                 ):
     user = await UsersService.authenticate_user(form_data.username, form_data.password, session)
     if not user:
         raise HTTPException(

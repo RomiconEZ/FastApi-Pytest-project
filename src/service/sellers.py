@@ -7,6 +7,10 @@ from src.schemas import IncomingSeller
 from src.schemas.sellers import UpdatedSeller
 from src.utils.db_session import DBSession
 
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.configurations.database import get_async_session
+
 
 class SellersService:
     @staticmethod

@@ -7,7 +7,6 @@ from src.schemas import IncomingBook
 from src.schemas.books import UpdatedBook
 from src.utils.db_session import DBSession
 
-
 class BookService:
     @staticmethod
     async def create_book(book: IncomingBook, session: DBSession):

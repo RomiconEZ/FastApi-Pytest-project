@@ -1,9 +1,11 @@
-from fastapi import APIRouter, status
+from fastapi import status
+from fastapi import APIRouter
 
 from src.schemas import IncomingBook, ReturnedAllBooks, ReturnedBook
 from src.schemas.books import UpdatedBook
 from src.service.books import BookService
 from src.utils.db_session import DBSession
+
 
 books_router = APIRouter(tags=["books"], prefix="/books")
 
@@ -21,8 +23,7 @@ async def create_book(
 # Ручка, возвращающая все книги
 @books_router.get("/", response_model=ReturnedAllBooks)
 async def get_all_books(session: DBSession):
-    # Хотим видеть формат:
-    # books: [{"id": 1, "title": "Blabla", ...}, {"id": 2, ...}]
+
     return await BookService.get_all_books(session)
 
 
