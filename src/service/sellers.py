@@ -4,24 +4,25 @@ from sqlalchemy.orm import selectinload
 
 from src.models.sellers import Seller
 from src.schemas import IncomingSeller
-from src.schemas.sellers import UpdatedSeller
+from src.schemas.sellers import UpdatedSeller, UserOut
+from src.utils.auth import get_password_hash, verify_password
 from src.utils.db_session import DBSession
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from src.configurations.database import get_async_session
+from fastapi import HTTPException
 
 
 class SellersService:
     @staticmethod
     async def create_seller(seller: IncomingSeller, session: DBSession):
+        hashed_password = get_password_hash(seller.password)
         new_seller = Seller(
             first_name=seller.first_name,
             last_name=seller.last_name,
             email=seller.email,
-            password=seller.password,
+            password=hashed_password,
         )
         session.add(new_seller)
+
         await session.flush()
 
         return new_seller
@@ -62,3 +63,15 @@ class SellersService:
             return updated_seller
         else:
             return Response(status_code=status.HTTP_404_NOT_FOUND)
+
+    @staticmethod
+    async def authenticate_user(email: str, password: str, session: DBSession) -> UserOut | None:
+        query = select(Seller).where(Seller.email == email)
+        res = await session.execute(query)
+
+        # используется для получения одного результата из выполненного запроса или None, если результат отсутствует.
+        seller = res.scalar_one_or_none()
+        if seller and verify_password(password, seller.password):
+            return UserOut.from_orm(seller)
+        else:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")

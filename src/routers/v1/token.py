@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from src.schemas.token import Token
-from src.service.users import UsersService
+from src.service.sellers import SellersService
 from src.utils.auth import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
 from src.utils.db_session import DBSession
 
@@ -18,7 +18,7 @@ auth_router = APIRouter(tags=["auth"])
 async def login_for_access_token(session: DBSession,
                                  form_data: OAuth2PasswordRequestForm = Depends(),
                                  ):
-    user = await UsersService.authenticate_user(form_data.username, form_data.password, session)
+    user = await SellersService.authenticate_user(form_data.username, form_data.password, session)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

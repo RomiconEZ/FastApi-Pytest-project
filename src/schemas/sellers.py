@@ -11,6 +11,7 @@ __all__ = [
     "BaseSeller",
     "ReturnedSellerWithBooks",
     "UpdatedSeller",
+    "UserOut"
 ]
 
 
@@ -38,3 +39,11 @@ class ReturnedAllSellers(BaseModel):
 
 class ReturnedSellerWithBooks(ReturnedSeller):
     books: List[ReturnedBookForSeller]
+
+
+class UserOut(BaseModel):
+    id: int
+    email: EmailStr
+
+    class Config:
+        from_attributes = True
