@@ -1,11 +1,11 @@
-from fastapi import status
+from fastapi import status, Depends
 from fastapi import APIRouter
 
 from src.schemas import IncomingSeller, ReturnedAllSellers, ReturnedSeller
-from src.schemas.sellers import ReturnedSellerWithBooks, UpdatedSeller
+from src.schemas.sellers import ReturnedSellerWithBooks, UpdatedSeller, UserOut
 from src.service.sellers import SellersService
+from src.utils.auth import get_current_user
 from src.utils.db_session import DBSession
-
 
 sellers_router = APIRouter(tags=["sellers"], prefix="/seller")
 
@@ -20,10 +20,9 @@ async def get_all_sellers(session: DBSession):
     return await SellersService.get_all_sellers(session)
 
 
-@sellers_router.get("/{seller_id}", response_model=ReturnedSellerWithBooks)
-async def get_seller(seller_id: int, session: DBSession):
-    return await SellersService.get_seller(seller_id, session)
-
+# @sellers_router.get("/{seller_id}", response_model=ReturnedSellerWithBooks)
+# async def get_seller(seller_id: int, session: DBSession):
+#     return await SellersService.get_seller(seller_id, session)
 
 @sellers_router.delete("/{seller_id}")
 async def delete_seller(seller_id: int, session: DBSession):
@@ -33,3 +32,10 @@ async def delete_seller(seller_id: int, session: DBSession):
 @sellers_router.put("/{seller_id}", response_model=ReturnedSeller)
 async def update_seller(seller_id: int, new_data: UpdatedSeller, session: DBSession):
     return await SellersService.update_seller(seller_id, new_data, session)
+
+
+# --------------------------------------------------------------------------------------------
+
+@sellers_router.get("/{seller_id}", response_model=ReturnedSellerWithBooks)
+async def get_seller(seller_id: int, session: DBSession, current_user: UserOut = Depends(get_current_user)):
+    return await SellersService.get_seller(seller_id, session)

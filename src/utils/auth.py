@@ -1,21 +1,22 @@
 from datetime import datetime, timedelta
+
+from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 
-from src.main import oauth2_scheme
+from src.configurations.settings import settings
 from src.models.sellers import Seller
 from src.schemas import UserOut
 from src.utils.db_session import DBSession
 from fastapi import Depends, HTTPException
 from jose import jwt, JWTError
-from sqlalchemy.future import select
-from dotenv import load_dotenv
-import os
 
-load_dotenv()  # Загрузка переменных окружения из файла .env
+from fastapi import status
+from sqlalchemy import select
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", default=30))
+SECRET_KEY = settings.secret_key
+ALGORITHM = settings.algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Создание контекста хеширования
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -57,19 +58,25 @@ def verify_access_token(token: str, credentials_exception):
         raise credentials_exception
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme), session: DBSession = Depends()) -> UserOut:
+async def get_current_user(session: DBSession, token: str = Depends(oauth2_scheme)) -> UserOut:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
+        username: str = payload.get("sub")
+        if username is None:
             raise HTTPException(status_code=400, detail="Invalid token payload")
 
-        async with session() as db:
-            result = await db.execute(select(Seller).filter(Seller.id == user_id))
-            user = result.scalars().first()
-            if user is None:
-                raise HTTPException(status_code=404, detail="User not found")
+        result = await session.execute(select(Seller).filter(Seller.email == username))
+        user = result.scalars().first()
+        if user is None:
+            raise HTTPException(status_code=404, detail="User not found")
 
-        return user
+        return UserOut.from_orm(user)
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+
+# Функция для аутентификации пользователя и получения токена доступа
+async def authenticate_user(async_client, username: str, password: str):
+    response = await async_client.post("/api/v1/token", data={"username": username, "password": password})
+    assert response.status_code == status.HTTP_200_OK
+    return response.json()["access_token"]

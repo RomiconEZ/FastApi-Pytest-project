@@ -4,6 +4,7 @@ from fastapi import status
 from sqlalchemy import select
 
 from src.models import books, sellers
+from src.utils.auth import authenticate_user, get_password_hash
 
 result = {
     "books": [
@@ -23,22 +24,32 @@ async def seller_id(db_session):
 
 # Тест на ручку создающую книгу
 @pytest.mark.asyncio
-async def test_create_book(async_client, seller_id):
+async def test_create_book(async_client, db_session):
+    # Подготовка: создание и аутентификация пользователя
+    user = sellers.Seller(first_name="Seller", last_name="User", email="seller_user@example.com",
+                          password=get_password_hash("secure_password"))
+    db_session.add(user)
+    await db_session.flush()
+    seller_id = user.id
+
+    access_token = await authenticate_user(async_client, "seller_user@example.com", "secure_password")
+
+    # Данные для создания книги
     data = {"title": "Wrong Code", "author": "Robert Martin", "pages": 104, "year": 2007, "seller_id": seller_id}
-    response = await async_client.post("/api/v1/books/", json=data)
+
+    # Выполнение запроса с использованием токена аутентификации
+    response = await async_client.post("/api/v1/books/", headers={"Authorization": f"Bearer {access_token}"}, json=data)
 
     assert response.status_code == status.HTTP_201_CREATED
 
     result_data = response.json()
 
-    assert result_data == {
-        "id": 1,
-        "title": "Wrong Code",
-        "author": "Robert Martin",
-        "count_pages": 104,
-        "year": 2007,
-        "seller_id": seller_id,
-    }
+    # Проверка, что данные в ответе соответствуют отправленным данным
+    assert result_data["title"] == data["title"]
+    assert result_data["author"] == data["author"]
+    assert result_data["count_pages"] == data["pages"]
+    assert result_data["year"] == data["year"]
+    assert result_data["seller_id"] == seller_id
 
 
 # Тест на ручку получения списка книг
@@ -129,26 +140,35 @@ async def test_delete_book(db_session, async_client, seller_id):
 
 # Тест на ручку обновления книги
 @pytest.mark.asyncio
-async def test_update_book(db_session, async_client, seller_id):
-    # Создаем книги вручную, а не через ручку, чтобы нам не попасться на ошибку которая
-    # может случиться в POST ручке
-    book = books.Book(author="Pushkin", title="Eugeny Onegin", year=2001, count_pages=104, seller_id=seller_id)
+async def test_update_book(db_session, async_client):
+    # Создание пользователя и его аутентификация для получения токена
+    user = sellers.Seller(first_name="Seller", last_name="User",
+                          email="update_book_user@example.com", password=get_password_hash("secure_password"))
+    db_session.add(user)
+    await db_session.flush()
+    seller_id = user.id
 
+    access_token = await authenticate_user(async_client, "update_book_user@example.com", "secure_password")
+
+    # Создание книги вручную
+    book = books.Book(author="Pushkin", title="Eugeny Onegin", year=2001, count_pages=104, seller_id=seller_id)
     db_session.add(book)
     await db_session.flush()
 
+    # Выполнение запроса на обновление книги с использованием токена аутентификации
     response = await async_client.put(
         f"/api/v1/books/{book.id}",
+        headers={"Authorization": f"Bearer {access_token}"},
         json={"title": "Mziri", "author": "Lermontov", "count_pages": 100, "year": 2007},
     )
 
     assert response.status_code == status.HTTP_200_OK
-    await db_session.flush()
 
-    # Проверяем, что обновились все поля
+    # Проверка обновления данных книги
     res = await db_session.get(books.Book, book.id)
     assert res.title == "Mziri"
     assert res.author == "Lermontov"
     assert res.count_pages == 100
     assert res.year == 2007
     assert res.id == book.id
+

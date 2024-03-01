@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     db_name: str
     db_test_name: str = "fastapi_project_test_db"
     max_connection_count: int = 10
+    secret_key: str
+    algorithm: str
+    access_token_expire_minutes: int
 
     @property
     def database_url(self) -> str:
