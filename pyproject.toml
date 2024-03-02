@@ -33,7 +33,7 @@ line_length = 120
 [tool.poetry]
 name = "fastapi-project"
 version = "0.1.0"
-description = ""
+description = "Учебный проект ШАД 'Книжный магазин'"
 authors = ["Неронов Роман Михайлович"]
 readme = "README.md"
 

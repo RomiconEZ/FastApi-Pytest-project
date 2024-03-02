@@ -28,6 +28,9 @@ install_reqs:
 tests:
 	make isort-check; make black-check; make flake8-check; make pytest
 
+start_app:
+	uvicorn src.main:app
+
 up_compose:
 	docker-compose -f docker-compose.yml up -d
 down_compose:

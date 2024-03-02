@@ -1,6 +1,7 @@
-""" Это модуль с фикстурами для пайтеста.
+"""
+Это модуль с фикстурами для пайтеста.
 Фикстуры - это особые функции, которые не надо импортировать явно.
-Сам пайтест подтягивает их по имени из файла conftest.py
+Сам pytest подтягивает их по имени из файла conftest.py
 """
 
 import asyncio
@@ -12,13 +13,17 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from src.configurations.settings import settings
 from src.models import books  # noqa
+from src.models import sellers
 from src.models.base import BaseModel
 from src.models.books import Book  # noqa F401
+
+from ..models.sellers import Seller
+from .constants import HASH_SELLER_1_EXAMPLE
 
 # Переопределяем движок для запуска тестов и подключаем его к тестовой базе.
 # Это решает проблему с сохранностью данных в основной базе приложения.
 # Фикстуры тестов их не зачистят.
-# и обеспечивает чистую среду для запуска тестов. В ней не будет лишних записей.
+# И обеспечивает чистую среду для запуска тестов. В ней не будет лишних записей.
 async_test_engine = create_async_engine(
     settings.database_test_url,
     echo=True,
@@ -28,11 +33,10 @@ async_test_engine = create_async_engine(
 async_test_session = async_sessionmaker(async_test_engine, expire_on_commit=False, autoflush=False)
 
 
-# Получаем цикл событий для асинхорнного потока выполнения задач.
+# Получаем цикл событий для асинхронного потока выполнения задач.
 @pytest_asyncio.fixture(scope="session")
 def event_loop():
     """Create an instance of the default event loop for each test case."""
-    # loop = asyncio.new_event_loop() # На разных версиях питона и разных ОС срабатывает по разному
     loop = asyncio.get_event_loop()
     yield loop
     loop.close()
@@ -47,7 +51,7 @@ async def create_tables() -> None:
         await connection.run_sync(BaseModel.metadata.create_all)
 
 
-# Создаем сессию для БД используемую для тестов
+# Создаем сессию для БД, используемую для тестов
 @pytest_asyncio.fixture(scope="function")
 async def db_session():
     async with async_test_engine.connect() as connection:
@@ -77,7 +81,7 @@ def test_app(override_get_async_session):
     return app
 
 
-# создаем асинхронного клиента для ручек
+# Создаем асинхронного клиента для ручек
 @pytest_asyncio.fixture(scope="function")
 async def async_client(test_app):
     async with httpx.AsyncClient(app=test_app, base_url="http://127.0.0.1:8000") as test_client:

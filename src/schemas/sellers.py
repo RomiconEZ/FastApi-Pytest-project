@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -11,13 +11,13 @@ __all__ = [
     "BaseSeller",
     "ReturnedSellerWithBooks",
     "UpdatedSeller",
-    "UserOut"
+    "SellerOut",
 ]
 
 
 class BaseSeller(BaseModel):
-    first_name: str = Field(min_length=3)
-    last_name: str = Field(min_length=3)
+    first_name: str = Field(min_length=2)
+    last_name: str = Field(min_length=2)
     email: EmailStr
 
 
@@ -28,20 +28,34 @@ class IncomingSeller(BaseSeller):
 class ReturnedSeller(BaseSeller):
     id: int
 
+    class Config:
+        from_attributes = True
 
-class UpdatedSeller(BaseSeller):
-    pass
+
+class UpdatedSeller(BaseModel):
+    first_name: Optional[str] = Field(default=None, min_length=2)
+    last_name: Optional[str] = Field(default=None, min_length=2)
+    email: Optional[EmailStr] = Field(default=None)
+
+    class Config:
+        from_attributes = True
 
 
 class ReturnedAllSellers(BaseModel):
-    sellers: list[ReturnedSeller]
+    sellers: List[ReturnedSeller]
+
+    class Config:
+        from_attributes = True
 
 
 class ReturnedSellerWithBooks(ReturnedSeller):
-    books: List[ReturnedBookForSeller]
+    books: Optional[List[ReturnedBookForSeller]] = []
+
+    class Config:
+        from_attributes = True
 
 
-class UserOut(BaseModel):
+class SellerOut(BaseModel):
     id: int
     email: EmailStr
 
