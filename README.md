@@ -8,9 +8,9 @@ RUS: Проект создан в учебных целях. Представл�
 
 ## Application Launch / Запуск приложения
 
-ENG: Commands are executed in the console:
+ENG: Commands are executed in the console / RUS: Команды вызываются в консоли:
 
-RUS: Команды вызываются в консоли:
+#### Copy .env.example and change the name to .env / Скопируйте .env.example и измените имя на .env
 
 #### Deploying Postgres DB in a docker container / Развертка БД Postgres в docker-контейнере
 ```shell
