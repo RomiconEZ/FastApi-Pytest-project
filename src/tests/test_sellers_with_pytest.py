@@ -12,8 +12,9 @@ from src.tests.constants import (
 )
 from src.utils.auth import authenticate_user
 
-from .fixtures import get_2_new_sellers, get_new_seller
 from .helpers import add_2_books_for_seller
+
+from .fixtures import get_new_seller, get_2_new_sellers
 
 
 @pytest.mark.asyncio
@@ -25,8 +26,7 @@ async def test_create_seller(async_client):
 
     result_data = response.json()
 
-    assert result_data == {
-        "id": 1,
+    assert {key: result_data[key] for key in result_data if key != "id"} == {
         "first_name": HASH_SELLER_1_EXAMPLE["first_name"],
         "last_name": HASH_SELLER_1_EXAMPLE["last_name"],
         "email": HASH_SELLER_1_EXAMPLE["email"],

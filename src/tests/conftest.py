@@ -13,12 +13,9 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from src.configurations.settings import settings
 from src.models import books  # noqa
-from src.models import sellers
 from src.models.base import BaseModel
 from src.models.books import Book  # noqa F401
 
-from ..models.sellers import Seller
-from .constants import HASH_SELLER_1_EXAMPLE
 
 # Переопределяем движок для запуска тестов и подключаем его к тестовой базе.
 # Это решает проблему с сохранностью данных в основной базе приложения.
@@ -43,7 +40,7 @@ def event_loop():
 
 
 # Создаем таблицы в тестовой БД. Предварительно удаляя старые.
-@pytest_asyncio.fixture(scope="function", autouse=True)
+@pytest_asyncio.fixture(scope="session", autouse=True)
 async def create_tables() -> None:
     """Create tables in DB."""
     async with async_test_engine.begin() as connection:

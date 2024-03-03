@@ -11,6 +11,7 @@ from src.utils.auth import authenticate_user
 from .fixtures import get_new_seller
 
 
+
 # Тест на ручку создающую книгу
 @pytest.mark.asyncio
 async def test_create_book(async_client, db_session, get_new_seller):

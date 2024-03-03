@@ -1,8 +1,7 @@
 import pytest
 from fastapi import status
-
-from .constants import PREFIX, SELLER_1_EXAMPLE_PASSWORD
 from .fixtures import get_new_seller
+from .constants import PREFIX, SELLER_1_EXAMPLE_PASSWORD
 
 
 @pytest.mark.asyncio

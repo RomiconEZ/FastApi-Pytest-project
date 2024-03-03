@@ -13,6 +13,9 @@ black:
 isort:
 	isort . --settings-path=pyproject.toml --skip=.venv
 
+#autoflake:
+#	autoflake --remove-all-unused-imports -i -r src
+
 linters-check:
 	make isort-check; make black-check; make flake8-check
 
